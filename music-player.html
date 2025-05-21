@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Neon Music Player</title>
+    <link
+      href="https://fonts.googleapis.com/css?family=Orbitron:700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        background: #181028;
+        color: #fff;
+        font-family: "Orbitron", Arial, sans-serif;
+        margin: 0;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-start;
+      }
+      .music-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 2rem;
+        justify-content: center;
+        margin-top: 3rem;
+        margin-bottom: 8rem;
+      }
+      .song-card {
+        background: #222033;
+        border-radius: 1.5rem;
+        box-shadow: 0 0 24px 6px #39ff1490, 0 0 8px 2px #80008080;
+        border: 2px solid #39ff14;
+        width: 200px;
+        padding: 1.5rem 1rem 1rem 1rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+        position: relative;
+        overflow: hidden;
+        animation: neon-flicker 2.5s infinite alternate;
+      }
+      .song-card.active {
+        border-color: #800080;
+        box-shadow: 0 0 48px 12px #800080cc, 0 0 24px 8px #39ff14cc;
+        z-index: 2;
+        transform: scale(1.07) rotate(-2deg);
+      }
+      .song-card:hover {
+        transform: scale(1.05) rotate(-2deg);
+        box-shadow: 0 0 40px 10px #39ff14cc, 0 0 16px 4px #800080cc;
+      }
+      @keyframes neon-flicker {
+        0%,
+        100% {
+          box-shadow: 0 0 24px 6px #39ff1490, 0 0 8px 2px #80008080;
+        }
+        50% {
+          box-shadow: 0 0 36px 12px #39ff14cc, 0 0 16px 4px #800080cc;
+        }
+      }
+      .song-img {
+        width: 120px;
+        height: 120px;
+        border-radius: 1rem;
+        object-fit: cover;
+        border: 3px solid #800080;
+        box-shadow: 0 0 16px 4px #39ff14cc;
+        margin-bottom: 1rem;
+        background: #333;
+      }
+      .song-title {
+        font-size: 1.2rem;
+        color: #39ff14;
+        text-shadow: 0 0 8px #39ff14, 0 0 2px #800080;
+        margin-bottom: 0.3rem;
+        font-weight: bold;
+        letter-spacing: 2px;
+      }
+      .song-artist {
+        font-size: 1rem;
+        color: #fff;
+        opacity: 0.8;
+        margin-bottom: 0.5rem;
+      }
+      .player-bar {
+        position: fixed;
+        top: 0;
+        bottom: unset;
+        left: 0;
+        width: 100vw;
+        background: rgba(24, 16, 40, 0.98);
+        box-shadow: 0 2px 24px 2px #800080cc;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem 0 1rem 0;
+        z-index: 10;
+      }
+      .player-controls {
+        display: flex;
+        gap: 2.5rem;
+        align-items: center;
+        margin-bottom: 0.7rem;
+      }
+      .icon-btn {
+        background: none;
+        border: none;
+        outline: none;
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 50%;
+        transition: box-shadow 0.2s, background 0.2s;
+        box-shadow: 0 0 12px 2px #39ff14cc;
+        animation: glow 1.5s infinite alternate;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .icon-btn:active {
+        background: #80008044;
+        box-shadow: 0 0 24px 6px #39ff14cc;
+      }
+      @keyframes glow {
+        0% {
+          box-shadow: 0 0 12px 2px #39ff14cc;
+        }
+        100% {
+          box-shadow: 0 0 24px 6px #39ff14cc, 0 0 8px 2px #800080cc;
+        }
+      }
+      .icon-btn svg {
+        width: 32px;
+        height: 32px;
+        fill: #39ff14;
+        filter: drop-shadow(0 0 6px #39ff14cc) drop-shadow(0 0 2px #800080cc);
+        transition: fill 0.2s;
+      }
+      .icon-btn:hover svg {
+        fill: #800080;
+      }
+      .current-song-info {
+        margin-left: 2rem;
+        color: #fff;
+        font-size: 1.1rem;
+        letter-spacing: 1px;
+        text-shadow: 0 0 8px #39ff14, 0 0 2px #800080;
+        min-width: 180px;
+        max-width: 220px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .progress-container {
+        width: 80vw;
+        max-width: 500px;
+        height: 12px;
+        background: #222033;
+        border-radius: 8px;
+        margin: 0.5rem 0 0.7rem 0;
+        box-shadow: 0 0 8px #800080cc, 0 0 16px #39ff1444;
+        cursor: pointer;
+        position: relative;
+        display: flex;
+        align-items: center;
+      }
+      .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #39ff14, #800080);
+        border-radius: 8px;
+        transition: width 0.2s;
+        box-shadow: 0 0 8px #39ff14cc;
+      }
+      .time-info {
+        display: flex;
+        justify-content: space-between;
+        width: 80vw;
+        max-width: 500px;
+        font-size: 0.95rem;
+        color: #39ff14;
+        text-shadow: 0 0 4px #39ff14, 0 0 2px #800080;
+        margin-bottom: 0.2rem;
+      }
+      .volume-container {
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+        margin-top: 0.5rem;
+      }
+      .volume-slider {
+        width: 120px;
+        accent-color: #39ff14;
+        background: #222033;
+        border-radius: 8px;
+        box-shadow: 0 0 8px #39ff14cc;
+        height: 4px;
+      }
+      .icon-btn.small {
+        width: 28px;
+        height: 28px;
+        padding: 0.2rem;
+      }
+      @media (max-width: 700px) {
+        .music-container {
+          gap: 1rem;
+        }
+        .song-card {
+          width: 140px;
+          padding: 1rem 0.5rem;
+        }
+        .song-img {
+          width: 80px;
+          height: 80px;
+        }
+        .player-bar {
+          flex-direction: column;
+          padding: 1rem 0 0.5rem 0;
+        }
+        .current-song-info {
+          margin-left: 0;
+          margin-top: 0.5rem;
+          font-size: 1rem;
+        }
+        .progress-container,
+        .time-info {
+          width: 95vw;
+          max-width: 95vw;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      style="
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        margin-top: 2rem;
+        margin-bottom: 1rem;
+      "
+    >
+      <!-- SVG LOGO START -->
+      <svg
+        width="320"
+        height="100"
+        viewBox="0 0 320 100"
+        style="max-width: 90vw; height: auto"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <linearGradient id="purpleGreen" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#800080" />
+            <stop offset="100%" stop-color="#39FF14" />
+          </linearGradient>
+          <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow
+              dx="0"
+              dy="4"
+              stdDeviation="3"
+              flood-color="#460246FF"
+            />
+          </filter>
+        </defs>
+        <rect width="320" height="100" rx="24" fill="url(#purpleGreen)" />
+        <g filter="url(#shadow)">
+          <path
+            d="M40,80 L40,30 L60,70 L60,30"
+            stroke="#660278"
+            stroke-width="8"
+            fill="none"
+            stroke-linecap="round"
+          />
+          <path
+            d="M75,80 L75,30 L85,55 L95,30 L95,80"
+            stroke="#660278"
+            stroke-width="8"
+            fill="none"
+            stroke-linecap="round"
+          />
+          <path
+            d="M115,30 L115,80 Q135,80 135,55 Q135,30 115,30 Z M115,55 Q135,55 135,80 Q135,80 115,80 Z"
+            stroke="#660278"
+            stroke-width="8"
+            fill="none"
+            stroke-linecap="round"
+          />
+          <path
+            d="M155,80 L165,30 L175,80 M160,60 L170,60"
+            stroke="#710786F6"
+            stroke-width="8"
+            fill="none"
+            stroke-linecap="round"
+          />
+        </g>
+        <circle cx="200" cy="50" r="18" fill="#39FF14" fill-opacity="0.18" />
+        <circle cx="200" cy="50" r="10" fill="#800080" fill-opacity="0.5" />
+      </svg>
+      <!-- SVG LOGO END -->
+    </div>
+    <div class="player-bar">
+      <div class="player-controls">
+        <button class="icon-btn small" id="shuffleBtn" title="Shuffle">
+          <svg viewBox="0 0 32 32">
+            <polyline points="4,24 28,8" />
+            <polyline points="20,8 28,8 28,16" />
+            <polyline points="4,8 12,16" />
+            <polyline points="20,24 28,24 28,16" />
+          </svg>
+        </button>
+        <button class="icon-btn" id="prevBtn" title="Previous">
+          <svg viewBox="0 0 32 32"><polygon points="22,6 10,16 22,26" /></svg>
+        </button>
+        <button class="icon-btn" id="playPauseBtn" title="Play/Pause">
+          <svg id="playIcon" viewBox="0 0 32 32">
+            <polygon points="10,6 26,16 10,26" />
+          </svg>
+          <svg id="pauseIcon" viewBox="0 0 32 32" style="display: none">
+            <rect x="10" y="6" width="4" height="20" />
+            <rect x="18" y="6" width="4" height="20" />
+          </svg>
+        </button>
+        <button class="icon-btn" id="nextBtn" title="Next">
+          <svg viewBox="0 0 32 32"><polygon points="10,6 22,16 10,26" /></svg>
+        </button>
+        <button class="icon-btn small" id="repeatBtn" title="Repeat">
+          <svg viewBox="0 0 32 32">
+            <path d="M8,8 Q4,16 16,16 Q28,16 24,8" />
+            <polyline points="24,8 28,8 28,12" />
+            <polyline points="8,24 4,24 4,20" />
+            <path d="M24,24 Q28,16 16,16 Q4,16 8,24" />
+          </svg>
+        </button>
+      </div>
+      <div class="time-info">
+        <span id="currentTime">0:00</span>
+        <span id="duration">0:00</span>
+      </div>
+      <div class="progress-container" id="progressContainer">
+        <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+      </div>
+      <div class="volume-container">
+        <button class="icon-btn small" id="muteBtn" title="Mute/Unmute">
+          <svg id="volumeIcon" viewBox="0 0 32 32">
+            <polygon points="8,12 16,12 20,8 20,24 16,20 8,20" />
+            <rect x="22" y="12" width="2" height="8" />
+          </svg>
+        </button>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          value="1"
+          id="volumeSlider"
+          class="volume-slider"
+          aria-label="Volume slider"
+        />
+      </div>
+      <div class="current-song-info" id="currentSongInfo">
+        <!-- Current song info will appear here -->
+      </div>
+    </div>
+    <div class="music-container" id="musicContainer" style="margin-top: 170px">
+      <!-- Song cards will be injected here -->
+    </div>
+    <audio id="audioPlayer" preload="auto"></audio>
+    <script>
+      // Dynamically generate song data from available files
+      const mp3Files = [
+        "She on My Mind (3).mp3",
+        "She on My Mind (2).mp3",
+        "She on My Mind (1).mp3",
+        "She on My Mind.mp3",
+        "⚡  Love's a war, no truce, no end, I ble (1).mp3",
+        "⚡  Love's a war, no truce, no end, I ble.mp3",
+        "____   (2).mp3",
+        "Casas Con Televisores.mp3",
+        "Alright, let's make this anthem __next-l (1).mp3",
+        "Alright, let's make this anthem __next-l.mp3",
+        "ha ha this where it gets good, listen up (3).mp3",
+        "ha ha this where it gets good, listen up (2).mp3",
+        "ha ha this where it gets good, listen up (1).mp3",
+        "ha ha this where it gets good, listen up.mp3",
+        "__🔥 _Class Warfare_ 🔥__   (2).mp3",
+        "__🔥 _Class Warfare_ 🔥__   (1).mp3",
+        "__🔥 _Class Warfare_ 🔥__  .mp3",
+        "____   (1).mp3",
+        "____  .mp3",
+        "(Choir chants rising, drums thunder)   (2).mp3",
+        "(Choir chants rising, drums thunder)   (1).mp3",
+        "(Choir chants rising, drums thunder)  .mp3",
+        "Beyond the Imagination.mp3",
+        "Demons are here (3).mp3",
+        "Bif (Remastered).mp3",
+        "Bif.mp3",
+        "infectious trap anthem ballad rap fast and unstopqble faster and trap explosive exciting abstract ex.mp3",
+        "(Record scratch) Yo, check the mic, one .mp3",
+        "Call Me (2).mp3",
+        "Call Me (3).mp3",
+        "Call Me (4).mp3",
+        "Chaos Infinite.mp3",
+        "Call Me (1).mp3",
+        "Call Me.mp3",
+        "Gas Lighting Me Is Like Lying To God (1).mp3",
+        "Caged in Shadows (1).mp3",
+        "Caged in Shadows (2).mp3",
+        "Gas Lighting Me Is Like Lying To God.mp3",
+        "Caged in Shadows.mp3",
+        "_Ｅ　Ｔ　Ｅ　Ｒ　Ｎ　Ｉ　Ｔ　Ｙ turnt (3).mp3",
+        "_Ｅ　Ｔ　Ｅ　Ｒ　Ｎ　Ｉ　Ｔ　Ｙ turnt (4).mp3",
+        "_Ｅ　Ｔ　Ｅ　Ｒ　Ｎ　Ｉ　Ｔ　Ｙ turnt (5).mp3",
+        "_Ｅ　Ｔ　Ｅ　Ｒ　Ｎ　Ｉ　Ｔ　Ｙ turnt (1).mp3",
+        "_Ｅ　Ｔ　Ｅ　Ｒ　Ｎ　Ｉ　Ｔ　Ｙ turnt (2).mp3",
+        "_Ｅ　Ｔ　Ｅ　Ｒ　Ｎ　Ｉ　Ｔ　Ｙ turnt.mp3",
+        "ES_Big Crash - Epidemic Sound.mp3",
+        "ES_Jump, Booster, Retro, Cartoony - Epidemic Sound.mp3",
+        "Fly Through the Gaps (1).mp3",
+        "Fly Through the Gaps.mp3",
+        "Falling for Her Shadow (2).mp3",
+        "Falling for Her Shadow (3).mp3",
+        "Falling for Her Shadow (1).mp3",
+        "Falling for Her Shadow.mp3",
+        "ha, ha two dudes one bitch wobble wobble (2).mp3",
+        "ha, ha two dudes one bitch wobble wobble (1).mp3",
+        "ha, ha two dudes one bitch wobble wobble.mp3",
+        "Heaven's Hypocrites (3).mp3",
+        "I am god (1).mp3",
+        "In the neon city's haze, I'm a ghost of .mp3",
+        "Heaven's Hypocrites (1).mp3",
+        "Heaven's Hypocrites (2) (1).mp3",
+        "Heaven's Hypocrites (2).mp3",
+        "I am god.mp3",
+        "Heaven's Hypocrites.mp3",
+      ];
+      const imageFiles = [
+        "images/Designer (14).jpeg",
+        "images/Designer (13).jpeg",
+        "images/Designer (12).jpeg",
+        "images/Designer (11).jpeg",
+        "images/Designer (10).jpeg",
+        "images/Designer (9).jpeg",
+        "images/Designer (8).jpeg",
+        "images/Designer (7).jpeg",
+        "images/Designer (6).jpeg",
+        "images/Designer (5).jpeg",
+        "images/Designer (4).jpeg",
+        "images/Designer (3).jpeg",
+        "images/Designer (4).png",
+        "images/Designer (3).png",
+        "images/Designer (2).png",
+      ];
+      function stripExtension(filename) {
+        return filename.replace(/\.[^/.]+$/, "");
+      }
+      const songs = mp3Files.map((file, i) => ({
+        title: stripExtension(file),
+        artist: "Unknown Artist",
+        image: imageFiles[i % imageFiles.length],
+        src: `sound/${file}`,
+      }));
+
+      const musicContainer = document.getElementById("musicContainer");
+      const audioPlayer = document.getElementById("audioPlayer");
+      const playPauseBtn = document.getElementById("playPauseBtn");
+      const playIcon = document.getElementById("playIcon");
+      const pauseIcon = document.getElementById("pauseIcon");
+      const prevBtn = document.getElementById("prevBtn");
+      const nextBtn = document.getElementById("nextBtn");
+      const currentSongInfo = document.getElementById("currentSongInfo");
+      const progressContainer = document.getElementById("progressContainer");
+      const progressBar = document.getElementById("progressBar");
+      const currentTimeEl = document.getElementById("currentTime");
+      const durationEl = document.getElementById("duration");
+      const volumeSlider = document.getElementById("volumeSlider");
+      const muteBtn = document.getElementById("muteBtn");
+      const volumeIcon = document.getElementById("volumeIcon");
+      const shuffleBtn = document.getElementById("shuffleBtn");
+      const repeatBtn = document.getElementById("repeatBtn");
+
+      let currentSong = 0;
+      let isShuffle = false;
+      let isRepeat = false;
+      let lastVolume = 1;
+
+      function renderSongs() {
+        musicContainer.innerHTML = "";
+        songs.forEach((song, idx) => {
+          const card = document.createElement("div");
+          card.className = "song-card" + (idx === currentSong ? " active" : "");
+          card.innerHTML = `
+          <img class="song-img" src="${song.image}" alt="${song.title}">
+          <div class="song-title">${song.title}</div>
+          <div class="song-artist">${song.artist}</div>
+        `;
+          card.onclick = () => playSong(idx);
+          musicContainer.appendChild(card);
+        });
+      }
+
+      function playSong(idx) {
+        currentSong = idx;
+        audioPlayer.src = songs[idx].src;
+        audioPlayer.play();
+        updatePlayerBar();
+        renderSongs();
+      }
+
+      function updatePlayerBar() {
+        currentSongInfo.textContent = `${songs[currentSong].title} — ${songs[currentSong].artist}`;
+        playIcon.style.display = audioPlayer.paused ? "" : "none";
+        pauseIcon.style.display = audioPlayer.paused ? "none" : "";
+        renderSongs();
+      }
+
+      playPauseBtn.onclick = () => {
+        if (audioPlayer.src === "" && songs.length > 0) {
+          playSong(0);
+        } else if (audioPlayer.paused) {
+          audioPlayer.play();
+        } else {
+          audioPlayer.pause();
+        }
+        updatePlayerBar();
+      };
+
+      prevBtn.onclick = () => {
+        currentSong = (currentSong - 1 + songs.length) % songs.length;
+        playSong(currentSong);
+      };
+      nextBtn.onclick = () => {
+        currentSong = (currentSong + 1) % songs.length;
+        playSong(currentSong);
+      };
+
+      audioPlayer.onended = () => {
+        if (isRepeat) {
+          audioPlayer.currentTime = 0;
+          audioPlayer.play();
+        } else if (isShuffle) {
+          let next;
+          do {
+            next = Math.floor(Math.random() * songs.length);
+          } while (next === currentSong && songs.length > 1);
+          playSong(next);
+        } else {
+          nextBtn.click();
+        }
+      };
+      audioPlayer.onplay = updatePlayerBar;
+      audioPlayer.onpause = updatePlayerBar;
+
+      // Progress bar
+      audioPlayer.ontimeupdate = () => {
+        const percent = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+        progressBar.style.width = percent + "%";
+        currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
+        durationEl.textContent = formatTime(audioPlayer.duration);
+      };
+      audioPlayer.onloadedmetadata = () => {
+        durationEl.textContent = formatTime(audioPlayer.duration);
+      };
+      progressContainer.onclick = (e) => {
+        const rect = progressContainer.getBoundingClientRect();
+        const percent = (e.clientX - rect.left) / rect.width;
+        audioPlayer.currentTime = percent * audioPlayer.duration;
+      };
+
+      // Volume
+      volumeSlider.oninput = (e) => {
+        audioPlayer.volume = e.target.value;
+        if (audioPlayer.volume === 0) {
+          volumeIcon.innerHTML =
+            '<rect x="8" y="12" width="8" height="8"/><rect x="22" y="12" width="2" height="8"/>';
+        } else {
+          volumeIcon.innerHTML =
+            '<polygon points="8,12 16,12 20,8 20,24 16,20 8,20"/><rect x="22" y="12" width="2" height="8"/>';
+        }
+      };
+      muteBtn.onclick = () => {
+        if (audioPlayer.volume > 0) {
+          lastVolume = audioPlayer.volume;
+          audioPlayer.volume = 0;
+          volumeSlider.value = 0;
+          volumeIcon.innerHTML =
+            '<rect x="8" y="12" width="8" height="8"/><rect x="22" y="12" width="2" height="8"/>';
+        } else {
+          audioPlayer.volume = lastVolume || 1;
+          volumeSlider.value = audioPlayer.volume;
+          volumeIcon.innerHTML =
+            '<polygon points="8,12 16,12 20,8 20,24 16,20 8,20"/><rect x="22" y="12" width="2" height="8"/>';
+        }
+      };
+
+      // Shuffle & Repeat
+      shuffleBtn.onclick = () => {
+        isShuffle = !isShuffle;
+        shuffleBtn.style.boxShadow = isShuffle
+          ? "0 0 24px 6px #39ff14cc, 0 0 8px 2px #800080cc"
+          : "";
+      };
+      repeatBtn.onclick = () => {
+        isRepeat = !isRepeat;
+        repeatBtn.style.boxShadow = isRepeat
+          ? "0 0 24px 6px #39ff14cc, 0 0 8px 2px #800080cc"
+          : "";
+      };
+
+      // Keyboard shortcuts
+      document.addEventListener("keydown", (e) => {
+        if (e.target.tagName === "INPUT") return;
+        if (e.code === "Space") {
+          e.preventDefault();
+          playPauseBtn.click();
+        } else if (e.code === "ArrowRight") {
+          nextBtn.click();
+        } else if (e.code === "ArrowLeft") {
+          prevBtn.click();
+        } else if (e.code === "ArrowUp") {
+          // Volume up
+          audioPlayer.volume = Math.min(1, audioPlayer.volume + 0.05);
+          volumeSlider.value = audioPlayer.volume;
+        } else if (e.code === "ArrowDown") {
+          // Volume down
+          audioPlayer.volume = Math.max(0, audioPlayer.volume - 0.05);
+          volumeSlider.value = audioPlayer.volume;
+        } else if (e.key.toLowerCase() === "m") {
+          muteBtn.click();
+        } else if (e.key.toLowerCase() === "s") {
+          shuffleBtn.click();
+        } else if (e.key.toLowerCase() === "r") {
+          repeatBtn.click();
+        }
+      });
+
+      function formatTime(sec) {
+        if (isNaN(sec)) return "0:00";
+        const m = Math.floor(sec / 60);
+        const s = Math.floor(sec % 60);
+        return `${m}:${s.toString().padStart(2, "0")}`;
+      }
+
+      // Initial render
+      renderSongs();
+      updatePlayerBar();
+      audioPlayer.volume = 1;
+      volumeSlider.value = 1;
+    </script>
+  </body>
+</html>
